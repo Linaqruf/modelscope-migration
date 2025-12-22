@@ -22,6 +22,7 @@ class MigrationTool:
     def __init__(self):
         self.hf_api = None
         self.ms_api = None
+        self.ms_token = None
         self.temp_dir = None
 
     def authenticate_hf(self, token: str) -> Tuple[bool, str]:
@@ -37,11 +38,13 @@ class MigrationTool:
     def authenticate_ms(self, token: str) -> Tuple[bool, str]:
         """Authenticate with ModelScope."""
         try:
+            # Store the token and create HubApi instance
+            # We'll authenticate when actually using the API
+            self.ms_token = token
             self.ms_api = HubApi()
-            self.ms_api.login(token)
-            return True, "✓ ModelScope authentication successful"
+            return True, "✓ ModelScope token stored successfully"
         except Exception as e:
-            return False, f"✗ ModelScope authentication failed: {str(e)}"
+            return False, f"✗ ModelScope initialization failed: {str(e)}"
 
     def download_from_hf(
         self,
@@ -97,8 +100,14 @@ class MigrationTool:
             Tuple of (success, message)
         """
         try:
-            if not self.ms_api:
+            if not self.ms_api or not hasattr(self, 'ms_token'):
                 return False, "✗ ModelScope not authenticated"
+
+            # Login with the stored token
+            try:
+                self.ms_api.login(self.ms_token)
+            except Exception as login_error:
+                return False, f"✗ ModelScope login failed: {str(login_error)}"
 
             # Determine visibility
             vis = ModelVisibility.PUBLIC if visibility == "public" else ModelVisibility.PRIVATE
@@ -309,9 +318,7 @@ def create_interface():
         output = gr.Textbox(
             label="Migration Status",
             lines=15,
-            max_lines=20,
-            interactive=False,
-            show_copy_button=True
+            interactive=False
         )
 
         migrate_btn.click(
