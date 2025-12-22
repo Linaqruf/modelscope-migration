@@ -205,3 +205,15 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# HuggingFace to ModelScope Migration Tool
+# Temporary download directories
+hf2ms_*/
+tmp_*/
+# Token files (never commit tokens!)
+*.token
+tokens.txt
+.tokens
+# Gradio cache and flagged data
+flagged/
+gradio_queue.db
