@@ -1,3 +1,14 @@
+---
+license: apache-2.0
+title: Modelscope Migration
+sdk: gradio
+emoji: 🚀
+colorFrom: red
+colorTo: blue
+short_description: Migrate your models to modelscope
+sdk_version: 6.2.0
+---
+
 # 🚀 HuggingFace to ModelScope Migration Tool
 
 A user-friendly Gradio application for migrating models and datasets from [HuggingFace](https://huggingface.co/) to [ModelScope](https://www.modelscope.cn/).

@@ -4,4 +4,4 @@ modelscope>=1.11.0
 
 # Performance optimization for faster downloads/uploads
 hf_transfer  # Faster upload/download with Rust-based backend
-hfai  # HuggingFace optimized transfer
+hf_xet  # XetHub integration for efficient model transfers
