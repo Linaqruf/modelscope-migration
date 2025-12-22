@@ -23,7 +23,7 @@ A user-friendly Gradio application for migrating models and datasets from [Huggi
 
 1. Clone this repository:
 ```bash
-git clone [Linaqruf/modelscope-migration](https://github.com/Linaqruf/modelscope-migration)
+git clone https://github.com/Linaqruf/modelscope-migration
 cd modelscope-migration
 ```
 
