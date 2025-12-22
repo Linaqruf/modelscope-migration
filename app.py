@@ -112,6 +112,7 @@ class MigrationTool:
                 "lgpl-3.0": Licenses.LGPL_V3,
                 "afl-3.0": Licenses.AFL_V3,
                 "ecl-2.0": Licenses.ECL_V2,
+                "other": None,
             }
             lic = license_map.get(license_type.lower(), Licenses.APACHE_V2)
 
@@ -126,13 +127,17 @@ class MigrationTool:
                     if repo_type == "model":
                         # Determine visibility for models (1=private, 5=public)
                         vis = ModelVisibility.PUBLIC if visibility == "public" else ModelVisibility.PRIVATE
-                        api.create_model(
-                            model_id=repo_id,
-                            visibility=vis,
-                            license=lic,
-                            chinese_name=chinese_name,
-                            token=token,
-                        )
+                        # Build parameters, only include license if not None
+                        create_params = {
+                            "model_id": repo_id,
+                            "visibility": vis,
+                            "token": token,
+                        }
+                        if lic is not None:
+                            create_params["license"] = lic
+                        if chinese_name:
+                            create_params["chinese_name"] = chinese_name
+                        api.create_model(**create_params)
                     else:
                         # Determine visibility for datasets (1=private, 5=public)
                         vis = DatasetVisibility.PUBLIC if visibility == "public" else DatasetVisibility.PRIVATE
@@ -141,13 +146,17 @@ class MigrationTool:
                         if len(parts) != 2:
                             return False, f"✗ Invalid dataset ID format: {repo_id}. Must be 'namespace/name'"
                         namespace, dataset_name = parts
-                        api.create_dataset(
-                            dataset_name=dataset_name,
-                            namespace=namespace,
-                            visibility=vis,
-                            license=lic,
-                            chinese_name=chinese_name,
-                        )
+                        # Build parameters, only include license if not None
+                        create_params = {
+                            "dataset_name": dataset_name,
+                            "namespace": namespace,
+                            "visibility": vis,
+                        }
+                        if lic is not None:
+                            create_params["license"] = lic
+                        if chinese_name:
+                            create_params["chinese_name"] = chinese_name
+                        api.create_dataset(**create_params)
                 except Exception as create_error:
                     error_msg = str(create_error)
                     # Only ignore if repo already exists (race condition)

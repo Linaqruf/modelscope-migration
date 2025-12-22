@@ -195,6 +195,7 @@ Contributions are welcome! Please feel free to submit issues or pull requests.
 
 ### [2025-12-22]
 - **Fixed**: Reliable private repository creation. Previously, if the initial creation failed, the tool would fallback to `upload_folder` which defaults to public visibility. Now, repository creation is explicitly handled with the user-selected visibility before any upload starts.
+- **Fixed**: License handling for repository creation. The ModelScope API now correctly handles cases where no license is specified (e.g., "other" license type). Previously, passing `null` for the license field would result in a 400 Bad Request error. The license parameter is now only included in API calls when a valid license is selected.
 
 ## 📄 License
 
