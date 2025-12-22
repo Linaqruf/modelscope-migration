@@ -14,7 +14,7 @@ import argparse
 import gradio as gr
 from huggingface_hub import snapshot_download, HfApi
 from modelscope.hub.api import HubApi
-from modelscope.hub.constants import Licenses, ModelVisibility
+from modelscope.hub.constants import Licenses
 import sys
 import io
 import threading
@@ -102,8 +102,10 @@ class MigrationTool:
             except Exception as login_error:
                 return False, f"✗ ModelScope Login failed: {str(login_error)}\n\n💡 Tip: Ensure you are using an 'SDK Token' from https://www.modelscope.cn (NOT modelscope.ai). The token usually starts with 'ms-'."
 
-            # Determine visibility
-            vis = ModelVisibility.PUBLIC if visibility == "public" else ModelVisibility.PRIVATE
+            # Normalize visibility (HubApi.create_repo expects: 'public' | 'private' | 'internal')
+            visibility_norm = (visibility or "public").strip().lower()
+            if visibility_norm not in {"public", "private", "internal"}:
+                return False, f"✗ Invalid visibility: {visibility}. Must be one of: public, private, internal"
 
             # Map license types
             license_map = {
@@ -119,36 +121,21 @@ class MigrationTool:
             }
             lic = license_map.get(license_type.lower(), Licenses.APACHE_V2)
 
-            # Create repository if it doesn't exist
-            try:
-                if repo_type == "model":
-                    api.create_model(
-                        model_id=repo_id,
-                        visibility=vis,
-                        license=lic,
-                        chinese_name=chinese_name,
-                        token=token,
-                    )
-                else:
-                    api.create_dataset(
-                        dataset_id=repo_id,
-                        visibility=vis,
-                        license=lic,
-                        chinese_name=chinese_name,
-                        token=token,
-                    )
-            except Exception:
-                # Repository might already exist, continue to push
-                # We update the visibility explicitly to ensure it matches user choice
-                try:
-                    api.set_repo_visibility(
-                        repo_id=repo_id,
-                        repo_type=repo_type,
-                        visibility=visibility,  # "public" or "private"
-                        token=token
-                    )
-                except Exception as vis_error:
-                    print(f"Warning: Failed to update visibility: {vis_error}")
+            # Ensure repo exists with the requested visibility BEFORE upload.
+            #
+            # Important: HubApi.upload_folder() internally calls create_repo(... exist_ok=True)
+            # with default visibility='public'. If we silently swallow create errors, upload_folder
+            # can create a *public* repo even when the user selected 'private'.
+            api.create_repo(
+                repo_id=repo_id,
+                token=token,
+                repo_type=repo_type,
+                visibility=visibility_norm,
+                license=lic,
+                chinese_name=chinese_name,
+                exist_ok=True,
+                create_default_config=False,
+            )
 
             # Push the model/dataset
             if repo_type == "model":

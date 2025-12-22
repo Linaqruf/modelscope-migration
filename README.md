@@ -191,6 +191,11 @@ The tool provides clear error messages for:
 
 Contributions are welcome! Please feel free to submit issues or pull requests.
 
+## 📜 Changelog
+
+### [2025-12-22]
+- **Fixed**: Reliable private repository creation. Previously, if the initial creation failed, the tool would fallback to `upload_folder` which defaults to public visibility. Now, repository creation is explicitly handled with the user-selected visibility before any upload starts.
+
 ## 📄 License
 
 This project is open source and available under the Apache 2.0 License.
