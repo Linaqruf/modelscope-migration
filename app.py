@@ -14,7 +14,7 @@ import argparse
 import gradio as gr
 from huggingface_hub import snapshot_download, HfApi
 from modelscope.hub.api import HubApi
-from modelscope.hub.constants import Licenses
+from modelscope.hub.constants import Licenses, ModelVisibility, DatasetVisibility
 import sys
 import io
 import threading
@@ -102,11 +102,6 @@ class MigrationTool:
             except Exception as login_error:
                 return False, f"✗ ModelScope Login failed: {str(login_error)}\n\n💡 Tip: Ensure you are using an 'SDK Token' from https://www.modelscope.cn (NOT modelscope.ai). The token usually starts with 'ms-'."
 
-            # Normalize visibility (HubApi.create_repo expects: 'public' | 'private' | 'internal')
-            visibility_norm = (visibility or "public").strip().lower()
-            if visibility_norm not in {"public", "private", "internal"}:
-                return False, f"✗ Invalid visibility: {visibility}. Must be one of: public, private, internal"
-
             # Map license types
             license_map = {
                 "apache-2.0": Licenses.APACHE_V2,
@@ -117,25 +112,47 @@ class MigrationTool:
                 "lgpl-3.0": Licenses.LGPL_V3,
                 "afl-3.0": Licenses.AFL_V3,
                 "ecl-2.0": Licenses.ECL_V2,
-                "other": None,
             }
             lic = license_map.get(license_type.lower(), Licenses.APACHE_V2)
 
-            # Ensure repo exists with the requested visibility BEFORE upload.
-            #
-            # Important: HubApi.upload_folder() internally calls create_repo(... exist_ok=True)
-            # with default visibility='public'. If we silently swallow create errors, upload_folder
-            # can create a *public* repo even when the user selected 'private'.
-            api.create_repo(
-                repo_id=repo_id,
-                token=token,
-                repo_type=repo_type,
-                visibility=visibility_norm,
-                license=lic,
-                chinese_name=chinese_name,
-                exist_ok=True,
-                create_default_config=False,
-            )
+            # Check if repository exists
+            repo_exists = api.repo_exists(repo_id=repo_id, repo_type=repo_type, token=token)
+            
+            # Create repository if it doesn't exist
+            # Important: We must create with the correct visibility BEFORE upload_folder,
+            # because upload_folder will create a public repo by default if repo doesn't exist
+            if not repo_exists:
+                try:
+                    if repo_type == "model":
+                        # Determine visibility for models (1=private, 5=public)
+                        vis = ModelVisibility.PUBLIC if visibility == "public" else ModelVisibility.PRIVATE
+                        api.create_model(
+                            model_id=repo_id,
+                            visibility=vis,
+                            license=lic,
+                            chinese_name=chinese_name,
+                            token=token,
+                        )
+                    else:
+                        # Determine visibility for datasets (1=private, 5=public)
+                        vis = DatasetVisibility.PUBLIC if visibility == "public" else DatasetVisibility.PRIVATE
+                        # For datasets, need to split repo_id into namespace and name
+                        parts = repo_id.split('/')
+                        if len(parts) != 2:
+                            return False, f"✗ Invalid dataset ID format: {repo_id}. Must be 'namespace/name'"
+                        namespace, dataset_name = parts
+                        api.create_dataset(
+                            dataset_name=dataset_name,
+                            namespace=namespace,
+                            visibility=vis,
+                            license=lic,
+                            chinese_name=chinese_name,
+                        )
+                except Exception as create_error:
+                    error_msg = str(create_error)
+                    # Only ignore if repo already exists (race condition)
+                    if "already exists" not in error_msg.lower():
+                        return False, f"✗ Failed to create repository: {error_msg}"
 
             # Push the model/dataset
             if repo_type == "model":
