@@ -137,9 +137,18 @@ class MigrationTool:
                         chinese_name=chinese_name,
                         token=token,
                     )
-            except Exception as create_error:
+            except Exception:
                 # Repository might already exist, continue to push
-                pass
+                # We update the visibility explicitly to ensure it matches user choice
+                try:
+                    api.set_repo_visibility(
+                        repo_id=repo_id,
+                        repo_type=repo_type,
+                        visibility=visibility,  # "public" or "private"
+                        token=token
+                    )
+                except Exception as vis_error:
+                    print(f"Warning: Failed to update visibility: {vis_error}")
 
             # Push the model/dataset
             if repo_type == "model":
