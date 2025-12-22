@@ -1,3 +1,7 @@
 gradio>=4.0.0
 huggingface-hub>=0.20.0
 modelscope>=1.11.0
+
+# Performance optimization for faster downloads/uploads
+hf_transfer  # Faster upload/download with Rust-based backend
+hfai  # HuggingFace optimized transfer

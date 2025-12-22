@@ -20,42 +20,20 @@ class MigrationTool:
     """Handles migration of models and datasets between HuggingFace and ModelScope."""
 
     def __init__(self):
-        self.hf_api = None
-        self.ms_api = None
-        self.ms_token = None
         self.temp_dir = None
-
-    def authenticate_hf(self, token: str) -> Tuple[bool, str]:
-        """Authenticate with HuggingFace."""
-        try:
-            self.hf_api = HfApi(token=token)
-            # Test the token
-            self.hf_api.whoami(token=token)
-            return True, "✓ HuggingFace authentication successful"
-        except Exception as e:
-            return False, f"✗ HuggingFace authentication failed: {str(e)}"
-
-    def authenticate_ms(self, token: str) -> Tuple[bool, str]:
-        """Authenticate with ModelScope."""
-        try:
-            # Store the token and create HubApi instance
-            # We'll authenticate when actually using the API
-            self.ms_token = token
-            self.ms_api = HubApi()
-            return True, "✓ ModelScope token stored successfully"
-        except Exception as e:
-            return False, f"✗ ModelScope initialization failed: {str(e)}"
 
     def download_from_hf(
         self,
         repo_id: str,
-        repo_type: str = "model"
+        repo_type: str = "model",
+        token: Optional[str] = None
     ) -> Tuple[bool, str, Optional[str]]:
         """Download a repository from HuggingFace.
 
         Args:
             repo_id: HuggingFace repository ID (e.g., 'username/repo-name')
             repo_type: Type of repository ('model' or 'dataset')
+            token: HuggingFace authentication token
 
         Returns:
             Tuple of (success, message, local_path)
@@ -70,7 +48,7 @@ class MigrationTool:
                 repo_type=repo_type,
                 local_dir=self.temp_dir,
                 local_dir_use_symlinks=False,
-                token=self.hf_api.token if self.hf_api else None
+                token=token
             )
 
             return True, f"✓ Successfully downloaded {repo_type} from HuggingFace", local_path
@@ -81,6 +59,7 @@ class MigrationTool:
         self,
         local_path: str,
         repo_id: str,
+        token: str,
         repo_type: str = "model",
         visibility: str = "public",
         license_type: str = "apache-2.0",
@@ -91,6 +70,7 @@ class MigrationTool:
         Args:
             local_path: Local path to the repository
             repo_id: ModelScope repository ID (e.g., 'username/repo-name')
+            token: ModelScope authentication token
             repo_type: Type of repository ('model' or 'dataset')
             visibility: Repository visibility ('public' or 'private')
             license_type: License type
@@ -100,14 +80,9 @@ class MigrationTool:
             Tuple of (success, message)
         """
         try:
-            if not self.ms_api or not hasattr(self, 'ms_token'):
-                return False, "✗ ModelScope not authenticated"
-
-            # Login with the stored token
-            try:
-                self.ms_api.login(self.ms_token)
-            except Exception as login_error:
-                return False, f"✗ ModelScope login failed: {str(login_error)}"
+            # Create HubApi instance and login
+            api = HubApi()
+            api.login(token)
 
             # Determine visibility
             vis = ModelVisibility.PUBLIC if visibility == "public" else ModelVisibility.PRIVATE
@@ -124,7 +99,7 @@ class MigrationTool:
             # Create repository if it doesn't exist
             try:
                 if repo_type == "model":
-                    self.ms_api.create_model(
+                    api.create_model(
                         model_id=repo_id,
                         visibility=vis,
                         license=lic,
@@ -136,13 +111,13 @@ class MigrationTool:
 
             # Push the model/dataset
             if repo_type == "model":
-                self.ms_api.push_model(
+                api.push_model(
                     model_id=repo_id,
                     model_dir=local_path
                 )
             else:
                 # For datasets, use similar approach
-                self.ms_api.push_model(
+                api.push_model(
                     model_id=repo_id,
                     model_dir=local_path
                 )
@@ -185,23 +160,9 @@ class MigrationTool:
         if not hf_repo_id or not ms_repo_id:
             return "✗ Error: Both source and destination repository IDs are required"
 
-        # Authenticate with HuggingFace
-        output.append("🔐 Authenticating with HuggingFace...")
-        success, msg = self.authenticate_hf(hf_token)
-        output.append(msg)
-        if not success:
-            return "\n".join(output)
-
-        # Authenticate with ModelScope
-        output.append("\n🔐 Authenticating with ModelScope...")
-        success, msg = self.authenticate_ms(ms_token)
-        output.append(msg)
-        if not success:
-            return "\n".join(output)
-
         # Download from HuggingFace
-        output.append(f"\n⬇️  Downloading {repo_type} from HuggingFace: {hf_repo_id}...")
-        success, msg, local_path = self.download_from_hf(hf_repo_id, repo_type)
+        output.append(f"⬇️  Downloading {repo_type} from HuggingFace: {hf_repo_id}...")
+        success, msg, local_path = self.download_from_hf(hf_repo_id, repo_type, hf_token)
         output.append(msg)
         if not success:
             self.cleanup()
@@ -212,6 +173,7 @@ class MigrationTool:
         success, msg = self.upload_to_ms(
             local_path,
             ms_repo_id,
+            ms_token,
             repo_type,
             visibility,
             license_type,
