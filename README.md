@@ -3,6 +3,9 @@
 
 A user-friendly Gradio application for migrating models and datasets from [HuggingFace](https://huggingface.co/) to [ModelScope](https://www.modelscope.cn/).
 
+[![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/Linaqruf/modelscope-migration)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Linaqruf/modelscope-migration/blob/main/notebook.ipynb)
+
 ## ✨ Features
 
 - **Easy Migration**: Migrate models and datasets with a simple web interface or a headless CLI.
