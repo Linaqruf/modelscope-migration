@@ -15,12 +15,13 @@ A user-friendly Gradio application for migrating models and datasets from [Huggi
 
 ## ✨ Features
 
-- **Easy Migration**: Migrate models and datasets with a simple web interface
-- **Secure Authentication**: Supports token-based authentication for both platforms
-- **Progress Tracking**: Real-time status updates during migration
-- **Flexible Configuration**: Customize repository visibility, license, and metadata
-- **Error Handling**: Comprehensive error messages and validation
-- **Automatic Cleanup**: Temporary files are automatically cleaned up after migration
+- **Easy Migration**: Migrate models and datasets with a simple web interface or a headless CLI.
+- **Real-Time Console Logs**: See actual library logs and progress bars directly in your browser.
+- **Smart Progress Tracking**: Visual progress bar and stable, in-place updates for multiple files.
+- **CLI Mode**: Fully automated migrations from the terminal without a browser.
+- **Secure Authentication**: Robust token validation and domain guidance for ModelScope.
+- **Automatic Cleanup**: Temporary files are automatically removed after every migration.
+- **Flexible Configuration**: Customize visibility, licenses, and metadata.
 
 ## 📋 Prerequisites
 
@@ -49,20 +50,23 @@ pip install gradio huggingface-hub modelscope
 
 ## 🚀 Quick Start
 
+### Web Interface
 1. Run the application:
 ```bash
 python app.py
 ```
 
-2. Open your browser and navigate to the provided URL (usually `http://localhost:7860`)
+2. Open your browser to `http://localhost:7860`.
 
-3. Fill in the required information:
-   - **HuggingFace Token**: Get from https://huggingface.co/settings/tokens
-   - **ModelScope Token**: Get from https://www.modelscope.cn/my/myaccesstoken
-   - **Source Repository**: The HuggingFace repository ID (e.g., `bert-base-uncased`)
-   - **Destination Repository**: Your desired ModelScope repository ID (e.g., `username/my-model`)
-
-4. Click "Start Migration" and wait for completion
+### CLI Mode (Headless)
+For automation or remote servers, use the CLI:
+```bash
+python app.py --cli \
+    --hf-token "your_hf_token" \
+    --ms-token "your_ms_token" \
+    --hf-repo "username/source-model" \
+    --ms-repo "username/dest-model"
+```
 
 ## 📖 Usage Guide
 
@@ -70,23 +74,24 @@ python app.py
 
 #### HuggingFace Token:
 1. Go to https://huggingface.co/settings/tokens
-2. Click "New token"
-3. Give it a name and select appropriate permissions
-4. Copy the token (starts with `hf_`)
+2. Copy your token (starts with `hf_`).
 
-#### ModelScope Token:
-1. Go to https://www.modelscope.cn/my/myaccesstoken
-2. Log in to your account
-3. Copy your SDK token
+#### ModelScope Token (CRITICAL):
+1. **Domain**: You MUST use tokens from **[modelscope.cn](https://www.modelscope.cn/)** (Chinese site). The international site (`modelscope.ai`) is not currently supported by the SDK.
+2. **Type**: Use an **SDK Token** from https://www.modelscope.cn/my/myaccesstoken.
+3. **Prefix**: The correct token usually starts with `ms-`.
 
-### Migration Options
+### Advanced CLI Options
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| **Repository Type** | Choose between `model` or `dataset` | `model` |
-| **Visibility** | Set repository as `public` or `private` | `public` |
-| **License** | Choose from Apache 2.0, MIT, GPL-3.0, or Other | `apache-2.0` |
-| **Chinese Name** | Optional Chinese name for the repository | None |
+| Argument | Description | Default |
+|----------|-------------|---------|
+| `--host` | Host for Gradio app | `127.0.0.1` |
+| `--port` | Port for Gradio app | `7860` |
+| `--share` | Create public Gradio link | `False` |
+| `--type` | `model` or `dataset` | `model` |
+| `--visibility` | `public` or `private` | `public` |
+| `--license` | Repo license (e.g., `mit`) | `apache-2.0` |
+| `--chinese-name`| Optional Chinese name | None |
 
 ### Example Repository IDs
 
@@ -150,9 +155,13 @@ The tool provides clear error messages for:
 
 ## 🐛 Troubleshooting
 
-### "Authentication failed"
-- Verify your tokens are correct and not expired
-- Check that you're using the right token for each platform
+### "Authentication failed" (400 Client Error)
+- **Whitespace**: Ensure there are no leading or trailing spaces in your tokens.
+- **Wrong Domain**: Verify you are using a token from **modelscope.cn**, not modelscope.ai.
+- **Wrong Token**: Ensure you are using the **SDK Token** (starts with `ms-`), not a Git token.
+
+### "Repository format error"
+- **Namespace**: ModelScope repository IDs *must* be in the format `username/repo-name`.
 
 ### "Download failed"
 - Ensure the HuggingFace repository exists and is accessible
