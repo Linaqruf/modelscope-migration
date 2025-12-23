@@ -22,6 +22,9 @@ import queue
 import time
 import re
 
+# Set ModelScope domain to use the international site
+os.environ.setdefault("MODELSCOPE_DOMAIN", "modelscope.ai")
+
 # Regex to match ANSI escape codes (like [A, [2K, etc.)
 ANSI_ESCAPE = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 
@@ -100,7 +103,7 @@ class MigrationTool:
             try:
                 api.login(token)
             except Exception as login_error:
-                return False, f"✗ ModelScope Login failed: {str(login_error)}\n\n💡 Tip: Ensure you are using an 'SDK Token' from https://www.modelscope.cn (NOT modelscope.ai). The token usually starts with 'ms-'."
+                return False, f"✗ ModelScope Login failed: {str(login_error)}\n\n💡 Tip: Ensure you are using an 'SDK Token' from https://www.modelscope.ai/my/myaccesstoken. The token usually starts with 'ms-'."
 
             # Map license types
             license_map = {
@@ -370,7 +373,7 @@ class MigrationTool:
             if results["success"]:
                 update_progress(1.0, desc="Completed")
                 final_status += f"\n\n✅ Migration completed successfully!"
-                final_status += f"\nYour {repo_type} is available at: https://www.modelscope.cn/models/{ms_repo_id}"
+                final_status += f"\nYour {repo_type} is available at: https://www.modelscope.ai/models/{ms_repo_id}"
             else:
                 update_progress(1.0, desc="Failed")
                 final_status += f"\n\n❌ Migration failed: {results['message']}"
@@ -396,8 +399,7 @@ def create_interface():
 
         ## 📋 Instructions:
         1. Get your **HuggingFace token** from: https://huggingface.co/settings/tokens
-        2. Get your **ModelScope SDK token** from: https://www.modelscope.cn/my/myaccesstoken
-           * **Note**: Use tokens from **modelscope.cn** (Chinese site). The international site (modelscope.ai) is not currently supported by the SDK.
+        2. Get your **ModelScope SDK token** from: https://www.modelscope.ai/my/myaccesstoken
         3. Fill in the repository details below
         4. Click "Start Migration"
         """)
@@ -414,8 +416,8 @@ def create_interface():
                 ms_token = gr.Textbox(
                     label="ModelScope Token",
                     type="password",
-                    placeholder="Enter your ModelScope SDK token",
-                    info="Use your SDK token from modelscope.cn (usually starts with 'ms-')"
+                    placeholder="ms_...",
+                    info="Your SDK token from modelscope.ai (usually starts with 'ms-')"
                 )
 
             with gr.Column():
@@ -507,9 +509,9 @@ def create_interface():
 
         ### 🔗 Resources:
         - [HuggingFace Hub](https://huggingface.co/)
-        - [ModelScope](https://www.modelscope.cn/)
+        - [ModelScope](https://www.modelscope.ai/)
         - [HuggingFace Token Settings](https://huggingface.co/settings/tokens)
-        - [ModelScope Token Settings](https://www.modelscope.cn/my/myaccesstoken)
+        - [ModelScope Token Settings](https://www.modelscope.ai/my/myaccesstoken)
         """)
 
     return app
