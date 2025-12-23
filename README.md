@@ -1,7 +1,7 @@
 
 # 🚀 HuggingFace to ModelScope Migration Tool
 
-A user-friendly Gradio application for migrating models and datasets from [HuggingFace](https://huggingface.co/) to [ModelScope](https://www.modelscope.cn/).
+A user-friendly Gradio application for migrating models and datasets from [HuggingFace](https://huggingface.co/) to [ModelScope](https://www.modelscope.ai/).
 
 [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/Linaqruf/modelscope-migration)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Linaqruf/modelscope-migration/blob/main/notebook.ipynb)
@@ -69,9 +69,9 @@ python app.py --cli \
 1. Go to https://huggingface.co/settings/tokens
 2. Copy your token (starts with `hf_`).
 
-#### ModelScope Token (CRITICAL):
-1. **Domain**: You MUST use tokens from **[modelscope.cn](https://www.modelscope.cn/)** (Chinese site). The international site (`modelscope.ai`) is not currently supported by the SDK.
-2. **Type**: Use an **SDK Token** from https://www.modelscope.cn/my/myaccesstoken.
+#### ModelScope Token:
+1. **Domain**: This tool is configured to use the international site **[modelscope.ai](https://www.modelscope.ai/)**.
+2. **Type**: Use an **SDK Token** from https://www.modelscope.ai/my/myaccesstoken.
 3. **Prefix**: The correct token usually starts with `ms-`.
 
 ### Advanced CLI Options
@@ -139,9 +139,9 @@ This project is open source and available under the Apache 2.0 License.
 ## 🔗 Resources
 
 - [HuggingFace Hub](https://huggingface.co/)
-- [ModelScope Platform](https://www.modelscope.cn/)
+- [ModelScope Platform](https://www.modelscope.ai/)
 - [Gradio Documentation](https://gradio.app/docs/)
 
 ---
 
-Made with ❤️ using [Gradio](https://gradio.app/), [HuggingFace Hub](https://huggingface.co/), and [ModelScope](https://www.modelscope.cn/)
+Made with ❤️ using [Gradio](https://gradio.app/), [HuggingFace Hub](https://huggingface.co/), and [ModelScope](https://www.modelscope.ai/)
